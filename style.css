@@ -1,7 +1,7 @@
 body, html {
     margin: 0;
     padding: 0;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
     background-color: #f7f8fa;
     color: #333;
 }
@@ -12,17 +12,17 @@ body, html {
 }
 
 .sidebar {
-    flex-basis: 33%; /* ここを変更して、サイドバーをページの横幅の1/3に設定 */
+    flex-basis: 33%;
     background-color: #fff;
     padding: 20px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    overflow-y: auto; /* サイドバーのコンテンツが多くなった場合のスクロールを可能に */
+    overflow-y: auto;
 }
 
 .profile-photo {
-    width: 80%; /* 写真のサイズをサイドバーに合わせて調整 */
+    width: 80%;
     border-radius: 50%;
-    margin: 0 auto 20px; /* 中央揃えにして、下にマージンを追加 */
+    margin: 0 auto 20px;
     display: block;
 }
 
@@ -31,7 +31,24 @@ body, html {
     margin-bottom: 10px;
     color: #333;
     text-decoration: none;
-    text-align: center; /* SNSリンクを中央揃えに */
+    text-align: center;
+    position: relative;
+    overflow: hidden; /* 必要なスタイルを追加 */
+}
+
+.social-links a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    left: -100%;
+    background: #333;
+    transition: left 0.3s;
+}
+
+.social-links a:hover::after {
+    left: 0;
 }
 
 .main-content {
@@ -49,7 +66,7 @@ section + section {
     margin-top: 40px;
 }
 
-/* スクロールバーのスタイルをカスタマイズ */
+/* スクロールバーのスタイルを維持 */
 .main-content::-webkit-scrollbar, .sidebar::-webkit-scrollbar {
     width: 8px;
 }
