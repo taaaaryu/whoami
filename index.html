@@ -80,13 +80,58 @@
   <script id="fragShader" type="x-shader/x-fragment">
     precision highp float;
     uniform float u_time;
-    uniform vec2 u_resolution;
-
-    void main() {
-      vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-      // 時間で変化するカラーサイン波
-      vec3 color = 0.5 + 0.5 * cos(u_time + uv.xyx * 3.0 + vec3(0.0, 2.0, 4.0));
-      gl_FragColor = vec4(color, 1.0);
+    uniform vec2  u_resolution;
+    uniform vec2  u_mouse;
+    
+    // シンプルな 2D ノイズ関数（例としてIQ のもの）
+    float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123); }
+    float noise(in vec2 p){
+        vec2 i = floor(p), f = fract(p);
+        // 4 つのコーナー
+        float a = hash(i), b = hash(i+vec2(1.0,0.0));
+        float c = hash(i+vec2(0.0,1.0)), d = hash(i+vec2(1.0,1.0));
+        vec2 u = f*f*(3.0-2.0*f);
+        return mix(a,b,u.x) + (c-a)*u.y*(1.0-u.x) + (d-b)*u.x*u.y;
+    }
+    // フラクタルノイズ
+    float fbm(vec2 p){
+        float v = 0.0, a = 0.5;
+        for(int i=0;i<5;i++){
+            v += a * noise(p);
+            p *= 2.0;
+            a *= 0.5;
+        }
+        return v;
+    }
+    // 円の滑らかなマスク
+    float circleMask(vec2 uv, vec2 c, float r){
+        float d = length(uv - c) - r;
+        return 1.0 - smoothstep(0.0, 0.005, d);
+    }
+    
+    void main(){
+        vec2 uv = gl_FragCoord.xy / u_resolution;
+        // マウスによる引き寄せワープ
+        vec2 m = u_mouse / u_resolution;
+        vec2 warp = uv + 0.2*(m-uv)*smoothstep(0.0,1.0,length(m-uv));
+        
+        vec3 col = vec3(0.0);
+        // 3 つの blob
+        for(int i=0;i<3;i++){
+            float phase = u_time*0.3 + float(i)*2.0;
+            vec2 center = 0.5 + 0.25 * vec2(cos(phase), sin(phase));
+            float radius = 0.2 + 0.05*sin(u_time*1.7 + float(i)*1.3);
+            float mask = circleMask(warp, center, radius);
+            // ノイズで境界をゆらがせる
+            float n = fbm((warp - center)*3.0 + u_time*0.4);
+            mask *= 1.0 - 0.3*n;
+            // 色定義
+            vec3 bc = mix(vec3(0.8,0.3,0.4), vec3(0.2,0.6,0.8), float(i)/2.0);
+            col += mask * bc;
+        }
+        // 全体に軽くガウスっぽいぼかしっぽい残像（フェードアウト）
+        col *= smoothstep(1.0, 0.0, length(uv - 0.5) * 1.2);
+        gl_FragColor = vec4(col, 1.0);
     }
   </script>
   <script src="shader.js"></script>
